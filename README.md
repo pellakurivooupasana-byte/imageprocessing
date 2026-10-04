@@ -37,12 +37,12 @@ The design can be extended to support more filters and FPGA implementation with 
 
 ## Project Files
 
-* [image_processing.v] – Main Verilog design
-* [image_processing_tb.v] – Verilog testbench
-* [image_to_data.py] – Python script to convert image to pixel data
-* [data_to_image.py] – Python script to convert output data to image
-* [input_image.png] – Original image
-* [output_images] – Processed output images
+* [top.v] – Main Verilog design
+* [top_tb.v] – Verilog testbench
+* [rose.mif.py] – Python script to convert image to pixel data
+* [view_frame_1.py] – Python script to convert output data to image
+* [rose.png] – Original image
+* [simulation_1,2,3,4,5] – Processed output images
 
 ## Simulation
 

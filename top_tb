@@ -1,0 +1,72 @@
+`timescale 1ns/1ps
+
+module top_tb;
+
+    // ---- DUT inputs ----
+    reg         MAX10_CLK1_50 = 0;
+    reg  [9:0]  SW = 10'd0;
+    reg  [1:0]  KEY = 2'b11;   // KEY0 = 1 (not pressed)
+
+    // ---- DUT outputs ----
+    wire [3:0]  VGA_R, VGA_G, VGA_B;
+    wire        VGA_HS, VGA_VS;
+
+    // ---- Instantiate DUT ----
+    top DUT (
+        .MAX10_CLK1_50 (MAX10_CLK1_50),
+        .SW            (SW),
+        .KEY           (KEY),
+        .VGA_R         (VGA_R),
+        .VGA_G         (VGA_G),
+        .VGA_B         (VGA_B),
+        .VGA_HS        (VGA_HS),
+        .VGA_VS        (VGA_VS)
+    );
+
+    // ---- 50 MHz clock ----
+    always #10 MAX10_CLK1_50 = ~MAX10_CLK1_50;   // 20 ns period
+
+    // ---- Output file ----
+    integer fd;
+    integer frame_count = 0;
+
+    // ---- Frame capture ----
+    // Capture one full frame (640 x 480 visible pixels) when active
+    integer x, y;
+    reg     capturing;
+
+    initial begin
+        // Set switch mode here (change for different modes)
+        SW = 10'b0000_000000;   // SW[3:0] = 0000 → Original
+
+        fd = $fopen("frame_original.txt", "w");
+
+        // Wait for PLL lock and a few frames to stabilize
+        #100000;
+        @(posedge VGA_VS);
+
+        // Now capture one full frame
+        capturing = 1;
+        frame_count = 0;
+
+        // Wait for next VS rising edge (start of frame)
+        @(posedge VGA_VS);
+
+        // Capture 480 visible lines
+        for (y = 0; y < 480; y = y + 1) begin
+            // Wait for HS rising edge (start of line)
+            @(posedge VGA_HS);
+
+            // Capture 640 visible pixels
+            for (x = 0; x < 640; x = x + 1) begin
+                @(posedge MAX10_CLK1_50);
+                $fwrite(fd, "%01x%01x%01x\n", VGA_R, VGA_G, VGA_B);
+            end
+        end
+
+        $fclose(fd);
+        $display("Captured one full frame to frame_original.txt");
+        $stop;
+    end
+
+endmodule
